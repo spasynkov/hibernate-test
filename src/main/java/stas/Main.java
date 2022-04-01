@@ -15,22 +15,56 @@ public class Main {
 			Persistence.createEntityManagerFactory("MySuperUnitName");
 
 	public static void main(String[] args) {
-		saveMessageToDb();
+		Message message = new Message();
+		message.setText("test");
+
+		saveMessageToDb(message);
+
 		List<Message> messages = readMessagesFromDb();
-		messages.forEach(System.out::println);
+		printMessagesFromDb(messages);
+
+		message = messages.get(0);
+		message.setText("Hello World");
+
+		updateMessageInDb(message);
+
+		messages = readMessagesFromDb();
+		printMessagesFromDb(messages);
 	}
 
-	private static void saveMessageToDb() {
+	private static void printMessagesFromDb(Iterable<Message> messages) {
+		messages.forEach(System.out::println);
+		System.out.println();
+	}
+
+	private static void updateMessageInDb(Message message) {
 		EntityManager entityManager = getEntityManager();
 		EntityTransaction transaction = entityManager.getTransaction();
 
 		try {
 			transaction.begin();
 
-			Message message = new Message();
-			message.setText("test");
+			entityManager.merge(message);
+
+			transaction.commit();
+			entityManager.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+
+			transaction.rollback();
+			entityManager.close();
+		}
+	}
+
+	private static void saveMessageToDb(Message message) {
+		EntityManager entityManager = getEntityManager();
+		EntityTransaction transaction = entityManager.getTransaction();
+
+		try {
+			transaction.begin();
 
 			entityManager.persist(message);
+
 			transaction.commit();
 			entityManager.close();
 		} catch (Exception e) {
